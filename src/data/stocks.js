@@ -1,0 +1,72 @@
+export const stocks = [
+  {
+    symbol: "AAPL",
+    name: "Apple",
+    price: 214.28,
+    change: 1.42,
+    trend: "Bullish",
+    sentiment: 78,
+    color: "#4de0ff",
+    history: [
+      { day: "Mon", price: 207 },
+      { day: "Tue", price: 209 },
+      { day: "Wed", price: 208 },
+      { day: "Thu", price: 212 },
+      { day: "Fri", price: 214 },
+    ],
+  },
+  {
+    symbol: "TSLA",
+    name: "Tesla",
+    price: 183.77,
+    change: -0.86,
+    trend: "Volatile",
+    sentiment: 61,
+    color: "#ff5e8a",
+    history: [
+      { day: "Mon", price: 191 },
+      { day: "Tue", price: 187 },
+      { day: "Wed", price: 189 },
+      { day: "Thu", price: 182 },
+      { day: "Fri", price: 184 },
+    ],
+  },
+  {
+    symbol: "NVDA",
+    name: "NVIDIA",
+    price: 129.93,
+    change: 2.64,
+    trend: "Momentum",
+    sentiment: 86,
+    color: "#49f2a7",
+    history: [
+      { day: "Mon", price: 121 },
+      { day: "Tue", price: 124 },
+      { day: "Wed", price: 126 },
+      { day: "Thu", price: 128 },
+      { day: "Fri", price: 130 },
+    ],
+  },
+  {
+    symbol: "MSFT",
+    name: "Microsoft",
+    price: 447.61,
+    change: 0.93,
+    trend: "Steady",
+    sentiment: 73,
+    color: "#f8c14a",
+    history: [
+      { day: "Mon", price: 439 },
+      { day: "Tue", price: 442 },
+      { day: "Wed", price: 441 },
+      { day: "Thu", price: 446 },
+      { day: "Fri", price: 448 },
+    ],
+  },
+];
+
+export const marketIndexes = [
+  { name: "S&P 500", value: "5,248.9", change: "+0.74%" },
+  { name: "Nasdaq", value: "16,340.1", change: "+1.12%" },
+  { name: "Dow Jones", value: "39,807.4", change: "+0.35%" },
+];
