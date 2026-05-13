@@ -144,12 +144,19 @@ The production output is generated in `dist/`.
 2. In Vercel, import the GitHub repository.
 3. Use these settings:
    - Framework Preset: Vite
+   - Root Directory: `.`
    - Build Command: `npm run build`
    - Output Directory: `dist`
+   - Install Command: `npm install`
 4. Add environment variables:
    - `VITE_ALPHA_VANTAGE_API_KEY`
    - Optional: `VITE_API_BASE_URL` if using the deployed backend
 5. Deploy.
+
+Production note:
+
+- `VITE_ALPHA_VANTAGE_API_KEY` is embedded into the client bundle and is visible in the browser.
+- For a safer production setup, deploy the Express backend separately and set only `VITE_API_BASE_URL` in Vercel.
 
 Vercel CLI commands:
 
@@ -157,6 +164,14 @@ Vercel CLI commands:
 npm i -g vercel
 vercel
 vercel --prod
+```
+
+If Vercel asks for project settings, use:
+
+```text
+Framework: Vite
+Build Command: npm run build
+Output Directory: dist
 ```
 
 ## Deploy Backend To Render Or Railway

@@ -1,12 +1,29 @@
+import { Suspense, lazy } from "react";
 import { BrowserRouter, Navigate, Route, Routes, useLocation } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Header } from "./components/Header";
 import { ToastStack } from "./components/ToastStack";
 import { useToast } from "./hooks/useToast";
-import { ChatPage } from "./pages/ChatPage";
-import { DashboardPage } from "./pages/DashboardPage";
-import { InsightsPage } from "./pages/InsightsPage";
-import { ReportsPage } from "./pages/ReportsPage";
+
+const ChatPage = lazy(() => import("./pages/ChatPage").then((module) => ({ default: module.ChatPage })));
+const DashboardPage = lazy(() =>
+  import("./pages/DashboardPage").then((module) => ({ default: module.DashboardPage }))
+);
+const InsightsPage = lazy(() =>
+  import("./pages/InsightsPage").then((module) => ({ default: module.InsightsPage }))
+);
+const ReportsPage = lazy(() =>
+  import("./pages/ReportsPage").then((module) => ({ default: module.ReportsPage }))
+);
+
+function RouteFallback() {
+  return (
+    <div className="glass rounded-lg p-8">
+      <div className="h-5 w-40 animate-pulse rounded bg-white/10" />
+      <div className="mt-5 h-40 animate-pulse rounded-lg bg-white/[0.05]" />
+    </div>
+  );
+}
 
 function AppShell() {
   const { toasts, showToast } = useToast();
@@ -25,14 +42,16 @@ function AppShell() {
               transition={{ delay: 0.12 }}
               className="space-y-8"
             >
-              <Routes>
-                <Route path="/" element={<Navigate to="/dashboard" replace />} />
-                <Route path="/dashboard" element={<DashboardPage showToast={showToast} />} />
-                <Route path="/chat" element={<ChatPage showToast={showToast} />} />
-                <Route path="/insights" element={<InsightsPage showToast={showToast} />} />
-                <Route path="/reports" element={<ReportsPage showToast={showToast} />} />
-                <Route path="*" element={<Navigate to="/dashboard" replace />} />
-              </Routes>
+              <Suspense fallback={<RouteFallback />}>
+                <Routes>
+                  <Route path="/" element={<Navigate to="/dashboard" replace />} />
+                  <Route path="/dashboard" element={<DashboardPage showToast={showToast} />} />
+                  <Route path="/chat" element={<ChatPage showToast={showToast} />} />
+                  <Route path="/insights" element={<InsightsPage showToast={showToast} />} />
+                  <Route path="/reports" element={<ReportsPage showToast={showToast} />} />
+                  <Route path="*" element={<Navigate to="/dashboard" replace />} />
+                </Routes>
+              </Suspense>
             </motion.div>
           </div>
         </main>

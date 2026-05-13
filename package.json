@@ -2,6 +2,9 @@
   "name": "fingpt",
   "version": "1.0.0",
   "private": true,
+  "engines": {
+    "node": ">=20.19.0"
+  },
   "description": "FinGPT is a premium AI finance assistant built with React, Vite, Tailwind CSS, Express, and Alpha Vantage.",
   "type": "module",
   "scripts": {
