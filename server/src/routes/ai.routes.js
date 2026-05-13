@@ -4,6 +4,7 @@ import {
   fetchMarketMovers,
   fetchWatchlist,
   generateInsightText,
+  summarizeReportText,
 } from "../services/alphaVantage.service.js";
 
 const router = Router();
@@ -33,6 +34,16 @@ router.post("/insights", async (req, res, next) => {
     const { topic = "today's market conditions", mode = "summary" } = req.body;
     const text = generateInsightText(topic, mode);
     res.json({ insight: text });
+  } catch (error) {
+    next(error);
+  }
+});
+
+router.post("/summarize", async (req, res, next) => {
+  try {
+    const { reportText = "" } = req.body;
+    const summary = summarizeReportText(reportText);
+    res.json({ summary });
   } catch (error) {
     next(error);
   }

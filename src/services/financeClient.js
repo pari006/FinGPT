@@ -26,6 +26,22 @@ const defaultMovers = [
   { ticker: "TSLA", price: "183.77", change_amount: "-1.60", change_percentage: "-0.86%", volume: "88710000" },
 ];
 
+const financeTerms = [
+  "p/e",
+  "pe ratio",
+  "price to earnings",
+  "eps",
+  "roe",
+  "ebitda",
+  "dividend",
+  "market cap",
+  "beta",
+  "cash flow",
+  "inflation",
+  "interest rate",
+  "valuation",
+];
+
 function sleep(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
@@ -36,11 +52,179 @@ function parseNumber(value, fallback = 0) {
 }
 
 function extractSymbol(prompt = "") {
-  const directMatch = prompt.match(/\b[A-Z]{1,5}\b/);
-  if (directMatch) return directMatch[0];
-
   const lowerPrompt = prompt.toLowerCase();
+  const explicitTicker = prompt.match(/\b[A-Z]{2,5}\b/g)?.find((token) => companyAliases[token.toLowerCase()] || fallbackStocks.some((stock) => stock.symbol === token));
+  if (explicitTicker) return explicitTicker;
+
   return Object.entries(companyAliases).find(([alias]) => lowerPrompt.includes(alias))?.[1] || "AAPL";
+}
+
+function normalizeText(text = "") {
+  return text.toLowerCase().replace(/\s+/g, " ").trim();
+}
+
+function isTickerPrompt(prompt = "") {
+  const normalized = normalizeText(prompt);
+  if (financeTerms.some((term) => normalized.includes(term))) return false;
+
+  const explicitTicker = prompt.match(/\b[A-Z]{2,5}\b/g)?.find((token) => companyAliases[token.toLowerCase()] || fallbackStocks.some((stock) => stock.symbol === token));
+  if (explicitTicker) return true;
+
+  return Object.keys(companyAliases).some((alias) => normalized.includes(alias));
+}
+
+function splitSentences(text = "") {
+  return text
+    .replace(/\r/g, " ")
+    .split(/(?<=[.!?])\s+|\n+/)
+    .map((sentence) => sentence.trim())
+    .filter(Boolean);
+}
+
+function pickSentence(sentences, keywords) {
+  return sentences.find((sentence) => keywords.some((keyword) => sentence.toLowerCase().includes(keyword)));
+}
+
+function buildDefinitionAnswer(prompt) {
+  const lower = normalizeText(prompt);
+
+  if (lower.includes("p/e") || lower.includes("pe ratio") || lower.includes("price to earnings")) {
+    return [
+      "P/E ratio means price-to-earnings ratio.",
+      "",
+      "What it measures: how much investors are paying for one dollar of a company's earnings.",
+      "Simple reading: a P/E of 20 means the market is valuing the company at about 20 times its annual earnings per share.",
+      "",
+      "How to use it:",
+      "- Compare it with similar companies in the same sector.",
+      "- Check whether earnings are stable or temporarily inflated.",
+      "- Pair it with growth, margins, debt, and cash flow before forming a view.",
+      "",
+      "Why it matters: a high P/E can signal strong growth expectations, but it can also mean the stock is expensive if those expectations do not hold up.",
+      "",
+      "Risk note: P/E is not reliable on its own for loss-making companies or businesses with very cyclical earnings.",
+    ].join("\n");
+  }
+
+  return [
+    `Here is a plain-English explanation for ${prompt.trim()}.`,
+    "",
+    "Start by asking three things:",
+    "1. What does the metric measure?",
+    "2. Why do investors care about it?",
+    "3. What can it miss if you look at it alone?",
+    "",
+    "A good finance explanation should connect the term to profitability, growth, risk, or valuation rather than treating it as a standalone signal.",
+  ].join("\n");
+}
+
+function buildComparisonAnswer(prompt) {
+  const lower = normalizeText(prompt);
+  const mentionsApple = lower.includes("apple");
+  const mentionsMicrosoft = lower.includes("microsoft");
+
+  if (mentionsApple && mentionsMicrosoft) {
+    return [
+      "Apple and Microsoft are both large, profitable companies, but their business mix is different.",
+      "",
+      "Apple: more consumer-device driven, with iPhone demand and ecosystem loyalty doing most of the work.",
+      "Microsoft: more diversified across enterprise software, cloud infrastructure, productivity tools, and AI platform demand.",
+      "",
+      "What investors usually compare:",
+      "- Revenue durability: Microsoft often looks steadier because enterprise contracts are sticky.",
+      "- Margins: both are strong, but software and cloud can scale differently from hardware.",
+      "- Product concentration: Apple is more exposed to consumer upgrade cycles.",
+      "- Growth profile: Microsoft is often discussed more through cloud and platform expansion.",
+      "",
+      "Beginner takeaway: Apple can look like a powerful consumer ecosystem business, while Microsoft often looks like a broader business infrastructure company.",
+    ].join("\n");
+  }
+
+  return [
+    `To compare ${prompt.trim()}, focus on business model, growth quality, margins, balance-sheet strength, and how dependent each company is on one product or segment.`,
+    "",
+    "A useful comparison is not just which stock moved more recently, but which company has the more durable earnings engine.",
+  ].join("\n");
+}
+
+function buildChartAnswer() {
+  return [
+    "A safe way to read a stock chart is to treat it as context, not as proof.",
+    "",
+    "Start with these checks:",
+    "1. Trend: is the stock making higher highs and higher lows, or the opposite?",
+    "2. Volume: did the move happen with strong participation or weak trading?",
+    "3. Timeframe: a daily chart and a six-month chart can tell very different stories.",
+    "4. News context: earnings, guidance, rates, and macro data can overpower chart patterns.",
+    "",
+    "Beginner mistake to avoid: buying only because the chart looks strong without checking valuation, cash flow, and risk.",
+  ].join("\n");
+}
+
+function buildGeneralFinanceAnswer(prompt) {
+  const normalized = normalizeText(prompt);
+
+  if (normalized.includes("compare")) return buildComparisonAnswer(prompt);
+  if (normalized.includes("chart")) return buildChartAnswer();
+  if (normalized.includes("what is") || normalized.includes("explain") || normalized.includes("mean")) {
+    return buildDefinitionAnswer(prompt);
+  }
+
+  return [
+    `Here is a practical take on ${prompt.trim() || "the topic"}.`,
+    "",
+    "Look at four layers:",
+    "1. Fundamentals: revenue, margins, debt, and cash flow.",
+    "2. Valuation: what price investors are paying for that quality and growth.",
+    "3. Catalysts: earnings, guidance, rates, and sector news.",
+    "4. Risk: what could break the thesis and how quickly sentiment could change.",
+    "",
+    "This is educational information, not personalized financial advice.",
+  ].join("\n");
+}
+
+function summarizeReportText(reportText = "") {
+  const cleaned = reportText.replace(/\s+/g, " ").trim();
+  const sentences = splitSentences(reportText);
+  const companyLine = cleaned.match(/company\s*:\s*([^.:\n]+)/i)?.[1]?.trim();
+  const revenueSentence = pickSentence(sentences, ["revenue", "sales", "earnings", "margin", "profit"]);
+  const riskSentence = pickSentence(sentences, ["risk", "pressure", "inflation", "supply", "debt", "decline", "cautious"]);
+  const actionSentence = pickSentence(sentences, ["implement", "expand", "improve", "optimiz", "invest", "reduce"]);
+  const outlookSentence = pickSentence(sentences, ["outlook", "guidance", "remain", "expected", "long-term", "stability"]);
+
+  const highlights = [revenueSentence, riskSentence, actionSentence].filter(Boolean);
+  const keyTakeaway =
+    highlights[0] ||
+    sentences[0] ||
+    "The report does not provide enough detail for a stronger summary, so the safest reading is to focus on revenue quality, margin pressure, and balance-sheet risk.";
+
+  const risks = [riskSentence, outlookSentence]
+    .filter(Boolean)
+    .filter((sentence, index, items) => items.indexOf(sentence) === index);
+
+  const questions = [];
+  if (revenueSentence) questions.push("Are revenue growth and margins improving together, or is growth being supported by lower profitability?");
+  if (riskSentence) questions.push("Are the reported risks temporary, or do they point to a longer-term pressure on earnings quality?");
+  if (actionSentence) questions.push("Is management's response likely to improve cash flow, or is it mainly a short-term operational fix?");
+  if (questions.length === 0) {
+    questions.push("What would need to improve in revenue, margins, or cash flow to strengthen the investment case?");
+  }
+
+  return [
+    `Company: ${companyLine || "Not clearly stated"}`,
+    "",
+    "Summary:",
+    keyTakeaway,
+    "",
+    "What stands out:",
+    ...highlights.slice(0, 3).map((sentence, index) => `${index + 1}. ${sentence}`),
+    "",
+    "Main risks:",
+    ...(risks.length ? risks.map((sentence, index) => `${index + 1}. ${sentence}`) : ["1. The report text is limited, so hidden balance-sheet or demand risks may not be visible yet."]),
+    "",
+    "Questions to research next:",
+    ...questions.slice(0, 3).map((question, index) => `${index + 1}. ${question}`),
+  ].join("\n");
 }
 
 function inferSentiment(changePercent) {
@@ -233,12 +417,33 @@ export async function generateInsight(topic, mode) {
   return generateInsightText(topic, mode);
 }
 
+export async function summarizeFinancialReport(reportText) {
+  if (API_BASE_URL) {
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/summarize`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ reportText }),
+      });
+      if (response.ok) {
+        const data = await response.json();
+        return data.summary;
+      }
+    } catch {
+      // Local deterministic summary below.
+    }
+  }
+
+  await sleep(280);
+  return summarizeReportText(reportText);
+}
+
 async function buildFinanceAnswer(prompt) {
   const symbol = extractSymbol(prompt);
-  const hasTickerIntent = prompt.match(/\b[A-Z]{1,5}\b/) || Object.keys(companyAliases).some((alias) => prompt.toLowerCase().includes(alias));
+  const hasTickerIntent = isTickerPrompt(prompt);
 
   if (!hasTickerIntent) {
-    return generateInsightText(prompt, "finance explanation");
+    return buildGeneralFinanceAnswer(prompt);
   }
 
   const quote = await fetchQuoteDirect(symbol);

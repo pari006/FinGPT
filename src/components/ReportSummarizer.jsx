@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { FileUp, Loader2, ScanText } from "lucide-react";
-import { generateInsight } from "../services/financeClient";
+import { summarizeFinancialReport } from "../services/financeClient";
 
 export function ReportSummarizer({ showToast }) {
   const [reportText, setReportText] = useState("");
@@ -31,10 +31,7 @@ export function ReportSummarizer({ showToast }) {
 
     setIsLoading(true);
     try {
-      const result = await generateInsight(
-        `Summarize this financial report for a beginner investor. Include business performance, risks, cash flow clues, and questions to research next:\n\n${reportText.slice(0, 9000)}`,
-        "financial report summary"
-      );
+      const result = await summarizeFinancialReport(reportText.slice(0, 9000));
       setSummary(result);
       showToast("Report summary generated.", "success");
     } catch {
