@@ -1,0 +1,16 @@
+services:
+  - type: web
+    name: fingpt-api
+    runtime: node
+    rootDir: server
+    plan: free
+    buildCommand: npm install
+    startCommand: npm start
+    healthCheckPath: /api/health
+    envVars:
+      - key: ALPHA_VANTAGE_API_KEY
+        sync: false
+      - key: CLIENT_ORIGIN
+        sync: false
+      - key: CLIENT_ORIGINS
+        sync: false

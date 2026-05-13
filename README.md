@@ -185,6 +185,7 @@ Backend settings:
 - Environment variables:
   - `ALPHA_VANTAGE_API_KEY`
   - `CLIENT_ORIGIN=https://your-vercel-app.vercel.app`
+  - Optional: `CLIENT_ORIGINS=https://your-vercel-app.vercel.app,https://your-preview-url.vercel.app`
   - `PORT` is usually provided by the platform
 
 After backend deployment, set this variable in Vercel:
@@ -192,6 +193,8 @@ After backend deployment, set this variable in Vercel:
 ```env
 VITE_API_BASE_URL=https://your-backend-url.onrender.com
 ```
+
+Render can also use the included [render.yaml](D:/Projects/FInGPT/render.yaml) for one-click setup from the repo root.
 
 ## GitHub Setup
 

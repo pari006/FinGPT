@@ -9,12 +9,38 @@ dotenv.config();
 
 const app = express();
 const port = process.env.PORT || 5050;
-const allowedOrigin = process.env.CLIENT_ORIGIN || "http://localhost:5173";
+const configuredOrigins = [
+  process.env.CLIENT_ORIGIN,
+  ...(process.env.CLIENT_ORIGINS || "").split(","),
+  "http://localhost:5173",
+  "http://localhost:4173",
+]
+  .map((origin) => origin?.trim())
+  .filter(Boolean);
+
+function isAllowedOrigin(origin = "") {
+  if (!origin) return true;
+  if (configuredOrigins.includes(origin)) return true;
+
+  try {
+    const { hostname, protocol } = new URL(origin);
+    return protocol === "https:" && hostname.endsWith(".vercel.app");
+  } catch {
+    return false;
+  }
+}
 
 app.use(helmet());
 app.use(
   cors({
-    origin: [allowedOrigin, "http://localhost:4173"],
+    origin(origin, callback) {
+      if (isAllowedOrigin(origin)) {
+        callback(null, true);
+        return;
+      }
+
+      callback(new Error(`CORS blocked for origin: ${origin || "unknown"}`));
+    },
     methods: ["GET", "POST"],
   })
 );
