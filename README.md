@@ -1,39 +1,35 @@
 # FinGPT
 
-FinGPT is a production-ready finance assistant web application built for portfolio, internship, and deployment use. It combines a premium fintech dashboard, an Alpha Vantage-backed conversational finance assistant, market insights, stock sentiment cards, voice input, and a financial report summarizer.
+FinGPT is a modern AI-powered finance assistant that combines conversational guidance, stock dashboards, market insights, sentiment visualization, and financial report summarization in a polished web app.
 
-> Educational use only. FinGPT does not provide personalized financial advice.
+It is built for portfolio projects, internship showcases, and deployment-ready demos, with a Vite frontend and an Express backend that can be hosted separately for safer API key handling.
+
+> Disclaimer: FinGPT is for educational and demonstration purposes only and does not provide financial or investment advice.
 
 ## Features
 
-- Finance chatbot with streaming responses, conversation history, and Alpha Vantage quote lookup
-- Alpha Vantage-powered modular market-data service layer with safe demo fallback
+- AI finance chatbot with streaming-style responses and finance-focused explanations
 - Stock dashboard for Apple, Tesla, NVIDIA, and Microsoft
-- Mock prices, percentage movement, trend indicators, mini charts, and AI sentiment bars
-- AI market summaries, investment explanations, term definitions, and sentiment analysis
-- Voice input for supported browsers
-- Financial report summarizer for pasted report text and text-based uploads
-- Dark fintech theme with glassmorphism, animations, responsive layouts, and toast notifications
-- Vercel-compatible frontend and Render/Railway-compatible Express backend
-
-## Screenshots
-
-Add screenshots after deployment:
-
-- Dashboard
-- AI finance chatbot
-- Market insights
-- Report summarizer
+- Market summaries, investment explanations, term definitions, and sentiment analysis
+- Voice input support and responsive layouts
+- Financial report summarizer for pasted or uploaded text-based reports
+- Dark fintech UI with glassmorphism, charts, motion, and notifications
+- Frontend-only demo mode or backend-connected production mode
 
 ## Tech Stack
 
+### Frontend
 - React
 - Vite
 - Tailwind CSS
 - Framer Motion
 - Recharts
+
+### Backend
 - Node.js
 - Express
+
+### APIs and Services
 - Alpha Vantage API
 
 ## Project Structure
@@ -60,32 +56,35 @@ FinGPT/
 |-- tailwind.config.js
 |-- vite.config.js
 |-- vercel.json
+|-- render.yaml
 `-- README.md
 ```
 
 ## Environment Variables
 
-Copy the example file and add your Alpha Vantage API key.
+Copy the example environment file:
 
 ```bash
 cp .env.example .env
 ```
 
-Frontend-only mode:
+### Frontend-only mode
 
 ```env
 VITE_ALPHA_VANTAGE_API_KEY=your_alpha_vantage_key_here
 ```
 
-Backend mode:
+### Backend-connected mode
 
 ```env
 VITE_API_BASE_URL=http://localhost:5050
 ALPHA_VANTAGE_API_KEY=your_alpha_vantage_key_here
 PORT=5050
+CLIENT_ORIGIN=https://your-vercel-app.vercel.app
+CLIENT_ORIGINS=https://your-vercel-app.vercel.app,https://your-preview-url.vercel.app
 ```
 
-No API key is hardcoded. If no key is present, FinGPT uses educational demo responses so the UI remains usable.
+No API keys are hardcoded. FinGPT falls back to demo data when live data is unavailable.
 
 ## Local Development
 
@@ -114,19 +113,19 @@ Run the backend:
 npm run dev
 ```
 
-Open the frontend at:
+Frontend default URL:
 
 ```text
 http://localhost:5173
 ```
 
-Main app routes:
+Application routes:
 
 ```text
-http://localhost:5173/dashboard
-http://localhost:5173/chat
-http://localhost:5173/insights
-http://localhost:5173/reports
+/dashboard
+/chat
+/insights
+/reports
 ```
 
 ## Production Build
@@ -136,29 +135,24 @@ npm run build
 npm run preview
 ```
 
-The production output is generated in `dist/`.
+Production files are generated in `dist/`.
 
-## Deploy Frontend To Vercel
+## Deploy Frontend on Vercel
 
-1. Push this repository to GitHub.
-2. In Vercel, import the GitHub repository.
+1. Push the repository to GitHub.
+2. Import the repository into Vercel.
 3. Use these settings:
-   - Framework Preset: Vite
+   - Framework Preset: `Vite`
    - Root Directory: `.`
+   - Install Command: `npm install`
    - Build Command: `npm run build`
    - Output Directory: `dist`
-   - Install Command: `npm install`
 4. Add environment variables:
-   - `VITE_ALPHA_VANTAGE_API_KEY`
-   - Optional: `VITE_API_BASE_URL` if using the deployed backend
+   - `VITE_ALPHA_VANTAGE_API_KEY` for frontend-only mode
+   - `VITE_API_BASE_URL` for backend-connected mode
 5. Deploy.
 
-Production note:
-
-- `VITE_ALPHA_VANTAGE_API_KEY` is embedded into the client bundle and is visible in the browser.
-- For a safer production setup, deploy the Express backend separately and set only `VITE_API_BASE_URL` in Vercel.
-
-Vercel CLI commands:
+Vercel CLI:
 
 ```bash
 npm i -g vercel
@@ -166,15 +160,12 @@ vercel
 vercel --prod
 ```
 
-If Vercel asks for project settings, use:
+Production note:
 
-```text
-Framework: Vite
-Build Command: npm run build
-Output Directory: dist
-```
+- `VITE_ALPHA_VANTAGE_API_KEY` is embedded into the browser bundle.
+- For a safer production setup, deploy the backend separately and set `VITE_API_BASE_URL` in Vercel.
 
-## Deploy Backend To Render Or Railway
+## Deploy Backend on Render or Railway
 
 Deploy the `server/` directory as a Node service.
 
@@ -188,37 +179,46 @@ Backend settings:
   - Optional: `CLIENT_ORIGINS=https://your-vercel-app.vercel.app,https://your-preview-url.vercel.app`
   - `PORT` is usually provided by the platform
 
-After backend deployment, set this variable in Vercel:
+After backend deployment, set this in Vercel:
 
 ```env
 VITE_API_BASE_URL=https://your-backend-url.onrender.com
 ```
 
-Render can also use the included [render.yaml](D:/Projects/FInGPT/render.yaml) for one-click setup from the repo root.
+Render can also use the included `render.yaml` for one-click setup from the repo root.
 
 ## GitHub Setup
-
-Initialize and commit:
 
 ```bash
 git init
 git add .
 git commit -m "Initial FinGPT production app"
-```
-
-Create a GitHub repository, then link and push:
-
-```bash
-git remote add origin https://github.com/YOUR_USERNAME/fingpt.git
+git remote add origin https://github.com/pari006/FinGPT.git
 git branch -M main
 git push -u origin main
 ```
 
+## Screenshots
+
+Add screenshots after deployment:
+
+- Dashboard
+- AI finance chatbot
+- Market insights
+- Report summarizer
+- Mobile responsive layout
+
 ## Notes
 
-- The dashboard uses Alpha Vantage quote and market-mover endpoints when an API key is configured.
-- Alpha Vantage free quote data can be delayed or end-of-day depending on API entitlement.
-- Demo fallback data remains available so the UI does not break during presentations.
-- Alpha Vantage quote data powers the stock dashboard and finance assistant.
-- The backend API supports server-side key protection for production deployments.
-- The frontend can also run directly against Alpha Vantage for simple Vercel demos.
+- Alpha Vantage free-tier data may be delayed.
+- Demo fallback data keeps the UI usable during presentations.
+- Backend deployment keeps the production API key off the client.
+- Frontend-only mode remains useful for quick demos.
+
+## Future Enhancements
+
+- Portfolio tracking
+- Advanced stock analytics
+- OCR-backed PDF parsing
+- Real-time websocket updates
+- Authentication and personalized watchlists
