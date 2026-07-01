@@ -10,6 +10,10 @@ services:
     envVars:
       - key: ALPHA_VANTAGE_API_KEY
         sync: false
+      - key: OPENAI_API_KEY
+        sync: false
+      - key: OPENAI_MODEL
+        value: gpt-4o-mini
       - key: CLIENT_ORIGIN
         sync: false
       - key: CLIENT_ORIGINS

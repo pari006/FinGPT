@@ -1,11 +1,9 @@
-import dotenv from "dotenv";
+import "./config/env.js";
 import express from "express";
 import cors from "cors";
 import helmet from "helmet";
 import aiRouter from "./routes/ai.routes.js";
-
-dotenv.config({ path: "../.env" });
-dotenv.config();
+import { getAiStatus } from "./services/alphaVantage.service.js";
 
 const app = express();
 const port = process.env.PORT || 5050;
@@ -47,7 +45,7 @@ app.use(
 app.use(express.json({ limit: "1mb" }));
 
 app.get("/api/health", (_req, res) => {
-  res.json({ status: "ok", service: "FinGPT API" });
+  res.json({ status: "ok", service: "FinGPT API", ai: getAiStatus() });
 });
 
 app.use("/api", aiRouter);

@@ -1,10 +1,11 @@
 import { Router } from "express";
 import {
   createFinanceStream,
+  createInsightResponse,
+  createReportSummary,
   fetchMarketMovers,
   fetchWatchlist,
-  generateInsightText,
-  summarizeReportText,
+  getAiStatus,
 } from "../services/alphaVantage.service.js";
 
 const router = Router();
@@ -29,10 +30,14 @@ router.post("/chat", async (req, res, next) => {
   }
 });
 
+router.get("/ai-status", (_req, res) => {
+  res.json(getAiStatus());
+});
+
 router.post("/insights", async (req, res, next) => {
   try {
     const { topic = "today's market conditions", mode = "summary" } = req.body;
-    const text = generateInsightText(topic, mode);
+    const text = await createInsightResponse(topic, mode);
     res.json({ insight: text });
   } catch (error) {
     next(error);
@@ -42,7 +47,7 @@ router.post("/insights", async (req, res, next) => {
 router.post("/summarize", async (req, res, next) => {
   try {
     const { reportText = "" } = req.body;
-    const summary = summarizeReportText(reportText);
+    const summary = await createReportSummary(reportText);
     res.json({ summary });
   } catch (error) {
     next(error);

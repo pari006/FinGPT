@@ -1,8 +1,10 @@
+import "../config/env.js";
+import { collectModelResponse, getLlmStatus, isLlmConfigured, streamModelResponse } from "./llm.service.js";
+
 const API_KEY =
   process.env.ALPHA_VANTAGE_API_KEY ||
   process.env.VITE_ALPHA_VANTAGE_API_KEY ||
-  // Legacy fallback so an existing .env that still has this name keeps working.
-  process.env.VITE_GEMINI_API_KEY;
+  process.env.VITE_ALPHA_VANTAGE_KEY;
 
 const ALPHA_VANTAGE_URL = "https://www.alphavantage.co/query";
 
@@ -425,7 +427,93 @@ export async function createFinanceAnswer(prompt = "") {
   ].join("\n");
 }
 
-export async function* createFinanceStream({ prompt = "" }) {
+async function buildMarketContext(prompt = "") {
+  if (!isTickerPrompt(prompt)) return "";
+
+  const symbol = extractSymbol(prompt);
+  const [quote, overview] = await Promise.all([fetchQuote(symbol), fetchOverview(symbol)]);
+
+  return JSON.stringify(
+    {
+      symbol,
+      quote: {
+        price: quote.price,
+        change: quote.change,
+        changePercent: quote.changePercent,
+        volume: quote.volume,
+        latestTradingDay: quote.latestTradingDay,
+        source: quote.source,
+      },
+      overview: {
+        name: overview.name,
+        sector: overview.sector,
+        industry: overview.industry,
+        marketCap: overview.marketCap,
+        peRatio: overview.peRatio,
+        beta: overview.beta,
+        source: overview.source,
+      },
+    },
+    null,
+    2
+  );
+}
+
+function fallbackPrefix() {
+  if (isLlmConfigured()) return "The AI provider is temporarily unavailable, so I am using the local finance fallback.\n\n";
+  return "Local fallback mode: configure OPENAI_API_KEY on the backend for live AI responses.\n\n";
+}
+
+export function getAiStatus() {
+  return getLlmStatus();
+}
+
+export async function createInsightResponse(topic = "today's market conditions", mode = "market summary") {
+  if (!isLlmConfigured()) return generateInsightText(topic, mode);
+
+  try {
+    return await collectModelResponse({
+      prompt: `Create a ${mode} for this finance topic: ${topic}`,
+      temperature: 0.3,
+    });
+  } catch {
+    return `${fallbackPrefix()}${generateInsightText(topic, mode)}`;
+  }
+}
+
+export async function createReportSummary(reportText = "") {
+  const clippedText = reportText.slice(0, 9000);
+  if (!isLlmConfigured()) return summarizeReportText(clippedText);
+
+  try {
+    return await collectModelResponse({
+      prompt: [
+        "Summarize this financial report text for an investor education workflow.",
+        "Return sections for summary, key positives, key risks, and questions to research next.",
+        clippedText,
+      ].join("\n\n"),
+      temperature: 0.25,
+    });
+  } catch {
+    return `${fallbackPrefix()}${summarizeReportText(clippedText)}`;
+  }
+}
+
+export async function* createFinanceStream({ messages = [], prompt = "" }) {
+  if (isLlmConfigured()) {
+    try {
+      const marketContext = await buildMarketContext(prompt);
+      for await (const token of streamModelResponse({ messages, prompt, marketContext })) {
+        yield token;
+      }
+      return;
+    } catch {
+      yield fallbackPrefix();
+    }
+  } else {
+    yield fallbackPrefix();
+  }
+
   const answer = await createFinanceAnswer(prompt);
   for (const word of answer.split(" ")) {
     yield `${word} `;
