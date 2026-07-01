@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { Bot, Mic, MicOff, Send, UserRound } from "lucide-react";
-import { streamFinanceResponse } from "../services/financeClient";
+import { Bot, Mic, MicOff, Send, UserRound, Wifi, WifiOff } from "lucide-react";
+import { fetchAiStatus, streamFinanceResponse } from "../services/financeClient";
 
 const starters = [
   "Explain what a P/E ratio means for beginners.",
@@ -22,12 +22,35 @@ export function Chatbot({ showToast }) {
   const [input, setInput] = useState("");
   const [isStreaming, setIsStreaming] = useState(false);
   const [isListening, setIsListening] = useState(false);
+  const [aiStatus, setAiStatus] = useState(null);
   const bottomRef = useRef(null);
   const recognitionRef = useRef(null);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
+
+  useEffect(() => {
+    let mounted = true;
+
+    fetchAiStatus()
+      .then((status) => {
+        if (mounted) setAiStatus(status);
+      })
+      .catch(() => {
+        if (mounted) {
+          setAiStatus({
+            configured: false,
+            provider: "unavailable",
+            model: "local fallback",
+          });
+        }
+      });
+
+    return () => {
+      mounted = false;
+    };
+  }, []);
 
   function startVoiceInput() {
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -70,7 +93,7 @@ export function Chatbot({ showToast }) {
 
     try {
       await streamFinanceResponse({
-        messages,
+        messages: history,
         prompt,
         onToken: (token) => {
           setMessages((items) =>
@@ -84,7 +107,11 @@ export function Chatbot({ showToast }) {
       setMessages((items) =>
         items.map((item) =>
           item.id === assistantId
-            ? { ...item, content: "I could not reach the AI service. Check your environment variable and try again." }
+            ? {
+                ...item,
+                content:
+                  "I could not reach the AI service. Check VITE_API_BASE_URL on the frontend and OPENAI_API_KEY on the backend.",
+              }
             : item
         )
       );
@@ -102,6 +129,16 @@ export function Chatbot({ showToast }) {
         <p className="mt-3 text-sm leading-6 text-slate-300">
           Streaming answers, voice input, quote lookup, conversation history, and finance-specific safety rules are built into the assistant.
         </p>
+        <div
+          className={`mt-4 inline-flex items-center gap-2 rounded-lg border px-3 py-2 text-xs font-bold ${
+            aiStatus?.configured
+              ? "border-mint/30 bg-mint/10 text-mint"
+              : "border-amber/30 bg-amber/10 text-amber"
+          }`}
+        >
+          {aiStatus?.configured ? <Wifi size={15} /> : <WifiOff size={15} />}
+          {aiStatus?.configured ? "LLM connected" : "Fallback mode"}
+        </div>
 
         <div className="mt-7 space-y-3">
           {starters.map((starter) => (

@@ -1,6 +1,6 @@
 # FinGPT
 
-FinGPT is a modern AI-powered finance assistant that combines conversational guidance, stock dashboards, market insights, sentiment visualization, and financial report summarization in a polished web app.
+FinGPT is a modern AI-powered finance assistant that combines server-side LLM chat, stock dashboards, market insights, sentiment visualization, and financial report summarization in a polished web app.
 
 It is built for portfolio projects, internship showcases, and deployment-ready demos, with a Vite frontend and an Express backend that can be hosted separately for safer API key handling.
 
@@ -8,13 +8,13 @@ It is built for portfolio projects, internship showcases, and deployment-ready d
 
 ## Features
 
-- AI finance chatbot with streaming-style responses and finance-focused explanations
+- AI finance chatbot with server-side streaming responses and finance-focused guardrails
 - Stock dashboard for Apple, Tesla, NVIDIA, and Microsoft
 - Market summaries, investment explanations, term definitions, and sentiment analysis
 - Voice input support and responsive layouts
 - Financial report summarizer for pasted or uploaded text-based reports
 - Dark fintech UI with glassmorphism, charts, motion, and notifications
-- Frontend-only demo mode or backend-connected production mode
+- Honest fallback mode when live market or LLM credentials are not configured
 
 ## Tech Stack
 
@@ -31,6 +31,7 @@ It is built for portfolio projects, internship showcases, and deployment-ready d
 
 ### APIs and Services
 - Alpha Vantage API
+- OpenAI-compatible Chat Completions API
 
 ## Project Structure
 
@@ -79,12 +80,16 @@ VITE_ALPHA_VANTAGE_API_KEY=your_alpha_vantage_key_here
 ```env
 VITE_API_BASE_URL=http://localhost:5050
 ALPHA_VANTAGE_API_KEY=your_alpha_vantage_key_here
+OPENAI_API_KEY=your_openai_api_key_here
+OPENAI_MODEL=gpt-4o-mini
 PORT=5050
 CLIENT_ORIGIN=https://your-vercel-app.vercel.app
 CLIENT_ORIGINS=https://your-vercel-app.vercel.app,https://your-preview-url.vercel.app
 ```
 
-No API keys are hardcoded. FinGPT falls back to demo data when live data is unavailable.
+`OPENAI_API_KEY` must be configured on the backend for real LLM chat. If it is missing, FinGPT clearly shows fallback mode and returns deterministic finance guidance instead of pretending the chatbot is connected to a model.
+
+No backend API keys are hardcoded. For production, prefer backend-connected mode so provider keys stay out of the browser bundle.
 
 ## Local Development
 
@@ -113,6 +118,12 @@ Run the backend:
 npm run dev
 ```
 
+You can also start the backend from the project root:
+
+```bash
+npm run dev:api
+```
+
 Frontend default URL:
 
 ```text
@@ -126,6 +137,14 @@ Application routes:
 /chat
 /insights
 /reports
+```
+
+Useful API checks:
+
+```text
+GET http://localhost:5050/api/health
+GET http://localhost:5050/api/ai-status
+POST http://localhost:5050/api/chat
 ```
 
 ## Production Build
@@ -148,7 +167,6 @@ Production files are generated in `dist/`.
    - Build Command: `npm run build`
    - Output Directory: `dist`
 4. Add environment variables:
-   - `VITE_ALPHA_VANTAGE_API_KEY` for frontend-only mode
    - `VITE_API_BASE_URL` for backend-connected mode
 5. Deploy.
 
@@ -162,8 +180,8 @@ vercel --prod
 
 Production note:
 
-- `VITE_ALPHA_VANTAGE_API_KEY` is embedded into the browser bundle.
-- For a safer production setup, deploy the backend separately and set `VITE_API_BASE_URL` in Vercel.
+- Any `VITE_*` variable is embedded into the browser bundle.
+- For a safer production setup, deploy the backend separately and set only `VITE_API_BASE_URL` in Vercel.
 
 ## Deploy Backend on Render or Railway
 
@@ -175,6 +193,8 @@ Backend settings:
 - Start command: `npm start`
 - Environment variables:
   - `ALPHA_VANTAGE_API_KEY`
+  - `OPENAI_API_KEY`
+  - `OPENAI_MODEL=gpt-4o-mini`
   - `CLIENT_ORIGIN=https://your-vercel-app.vercel.app`
   - Optional: `CLIENT_ORIGINS=https://your-vercel-app.vercel.app,https://your-preview-url.vercel.app`
   - `PORT` is usually provided by the platform

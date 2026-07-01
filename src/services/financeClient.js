@@ -1,10 +1,7 @@
 import { stocks as fallbackStocks } from "../data/stocks";
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "";
-const ALPHA_VANTAGE_API_KEY =
-  import.meta.env.VITE_ALPHA_VANTAGE_API_KEY ||
-  // Legacy fallback so your current .env still works if the key was pasted here.
-  import.meta.env.VITE_GEMINI_API_KEY;
+const ALPHA_VANTAGE_API_KEY = import.meta.env.VITE_ALPHA_VANTAGE_API_KEY;
 
 const ALPHA_VANTAGE_URL = "https://www.alphavantage.co/query";
 
@@ -464,11 +461,28 @@ async function buildFinanceAnswer(prompt) {
   ].join("\n");
 }
 
-async function streamFromBackend({ prompt, onToken }) {
+export async function fetchAiStatus() {
+  if (!API_BASE_URL) {
+    return {
+      configured: false,
+      provider: "frontend-fallback",
+      model: "deterministic finance fallback",
+    };
+  }
+
+  const response = await fetch(`${API_BASE_URL}/api/ai-status`);
+  if (!response.ok) {
+    throw new Error("AI status unavailable");
+  }
+
+  return response.json();
+}
+
+async function streamFromBackend({ messages = [], prompt, onToken }) {
   const response = await fetch(`${API_BASE_URL}/api/chat`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ prompt }),
+    body: JSON.stringify({ messages, prompt }),
   });
 
   if (!response.ok || !response.body) {
@@ -497,16 +511,17 @@ async function streamFromBackend({ prompt, onToken }) {
   }
 }
 
-export async function streamFinanceResponse({ prompt, onToken }) {
+export async function streamFinanceResponse({ messages = [], prompt, onToken }) {
   try {
     if (API_BASE_URL) {
-      await streamFromBackend({ prompt, onToken });
+      await streamFromBackend({ messages, prompt, onToken });
       return;
     }
   } catch {
     // Direct Alpha Vantage fallback below.
   }
 
+  onToken("Frontend fallback mode: connect the Express backend and configure OPENAI_API_KEY for live AI responses.\n\n");
   const answer = await buildFinanceAnswer(prompt);
   for (const token of answer.split(" ")) {
     onToken(`${token} `);
